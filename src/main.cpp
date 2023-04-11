@@ -9,6 +9,7 @@
 #include "texture.h"
 #include "quad.h"
 #include "cube.h"
+#include "model.h"
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
@@ -122,6 +123,22 @@ GLFWwindow* Init()
     return window;
 }
 
+void cloud(Shader& shader, Quad2D& quad, float t, int texID)
+{
+    shader.use();
+    shader.setVec2("u_resolution", glm::vec2(camera.width, camera.height));
+    shader.setVec2("u_mouse", glm::vec2(lastX, camera.height - lastY));
+    shader.setVec3("cameraPos", camera.Position);
+    shader.setVec3("viewDir", camera.Front);
+    shader.setVec2("screenSize", camera.GetScreenSize());
+    shader.setMat4("cameraFrustum", camera.GetFrustumCorners());
+    shader.setMat4("cameraInvViewMatrix", glm::inverse(camera.GetViewMatrix()));
+    shader.setFloat("u_time", t);
+    shader.setInt("noiseImage", 0);
+    quad.BindTexture(GL_TEXTURE0, texID);
+    quad.Draw();
+}
+
 int main()
 {
     GLFWwindow* window = Init();
@@ -130,18 +147,24 @@ int main()
 
     Quad2D quad;
     Cube cube;
-    Texture col(1.0, 0.8, 0.5);
+
+    Texture col(1.0, 0.8, 0.0);
+    Texture valueNoiseTexture(valueNoiseImagePath.string());
 
     FrameBuffer fbo;
-    Texture framebufferImage(SCR_WIDTH, SCR_HEIGHT);
+    Texture framebufferImage(camera.width, camera.height);
     fbo.BindTexture(framebufferImage.ID);
-    Texture depthImage(SCR_WIDTH, SCR_HEIGHT);
+    Texture depthImage(camera.width, camera.height);
     fbo.BindTexture(depthImage.ID, GL_COLOR_ATTACHMENT1);
-    RenderBuffer rbo(SCR_WIDTH, SCR_HEIGHT);
+    RenderBuffer rbo(camera.width, camera.height);
     fbo.BindRenderBufferObject(rbo.ID);
     
     Shader worldShader(flatVertPath.string().c_str(), flatFragPath.string().c_str());
     Shader screenShader(screenVertPath.string().c_str(), screenFragPath.string().c_str());
+    //Shader noiseShader(noiseVertPath.string().c_str(), noiseFragPath.string().c_str());
+    Shader cloudShader(cloudVertPath.string().c_str(), cloudFragPath.string().c_str());
+    //Shader raymarchShader(raymarchVertPath.string().c_str(), raymarchFragPath.string().c_str());
+    Shader fogShader(fogVertPath.string().c_str(), fogFragPath.string().c_str());
 
     float lastFrame = 0.f;
     float dt = 0.f;
@@ -154,7 +177,7 @@ int main()
 
         processInput(window, dt);
 
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), aspectRatio, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.fov), camera.aspectRatio, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 model = glm::mat4(1.f);
 
@@ -164,22 +187,33 @@ int main()
         glEnable(GL_DEPTH_TEST);
         glClearColor(0.f, 0.f, 0.f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        worldShader.use();
+        /*worldShader.use();
         worldShader.setMat4("projection", projection);
         worldShader.setMat4("view", view);
         worldShader.setMat4("model", model);
-        worldShader.setInt("colorTexture", 0);
+        worldShader.setInt("colorTexture", 0);*/
+        //cube.BindTexture(GL_TEXTURE0, col.ID);
+
+        /*fogShader.use();
+        fogShader.setMat4("projection", projection);
+        fogShader.setMat4("view", view);
+        fogShader.setMat4("model", model);
+        fogShader.setVec2("screenSize", glm::vec2(camera.width, camera.height));
+        fogShader.setVec3("cameraPos", camera.Position);
+        fogShader.setInt("colorTexture", 0);
         cube.BindTexture(GL_TEXTURE0, col.ID);
-        cube.Draw();
+        cube.Draw();*/
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDisable(GL_DEPTH_TEST);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT); 
-        screenShader.use();
+        glClear(GL_COLOR_BUFFER_BIT);
+        /*screenShader.use();
         screenShader.setInt("screenTexture", 0);
         quad.BindTexture(GL_TEXTURE0, framebufferImage.ID);
-        quad.Draw();
+        quad.Draw();*/
+
+        cloud(cloudShader, quad, currentFrame, valueNoiseTexture.ID);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

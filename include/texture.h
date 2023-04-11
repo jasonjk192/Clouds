@@ -88,6 +88,7 @@ private:
         else
         {
             std::cout << "Failed to load texture: " << texPath << std::endl;
+            std::cout << "Returned a white 1x1 texture " << std::endl;
             Texture();
         }
     }

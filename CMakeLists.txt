@@ -41,6 +41,18 @@ FetchContent_MakeAvailable(stb)
 #-----------------------------
 
 #-----------------------------
+# assimp
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT FALSE)
+set(ASSIMP_BUILD_OBJ_IMPORTER TRUE)
+set(ASSIMP_BUILD_FBX_IMPORTER FALSE)
+set(ASSIMP_BUILD_BLEND_IMPORTER FALSE)
+set(ASSIMP_NO_EXPORT TRUE)
+set(ASSIMP_BUILD_TESTS FALSE)
+FetchContent_Declare(assimp GIT_REPOSITORY https://github.com/assimp/assimp.git GIT_TAG 5.2.0)
+FetchContent_MakeAvailable(assimp)
+#-----------------------------
+
+#-----------------------------
 # Source files
 #-----------------------------
 
@@ -72,6 +84,7 @@ set(PROJECT_LIBRARIES
 	"glfw;"
 	"glm;"
 	"glad;"
+	"assimp;"
   )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_LIBRARIES})
