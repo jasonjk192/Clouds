@@ -148,8 +148,8 @@ int main()
     Quad2D quad;
     Cube cube;
 
-    Texture col(1.0, 0.8, 0.0);
-    Texture valueNoiseTexture(valueNoiseImagePath.string());
+    Texture col(1.f, 0.8f, 0.f);
+    Texture valueNoiseTexture(valueNoiseImagePath.string(), false, GL_BYTE);
 
     FrameBuffer fbo;
     Texture framebufferImage(camera.width, camera.height);

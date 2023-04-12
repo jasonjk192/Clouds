@@ -8,11 +8,11 @@ float far  = 100.0;
 
 float _MinHeight = 0;
 float _MaxHeight = 5;
-float _FadeDistance = 0.1;
+float _FadeDistance = 1.0;
 float _Scale = 1.0;
 float _StepScale = 1.0;
 float _Steps = 40;
-vec4 _SunDir = vec4(1,0,0,0);
+vec4 _SunDir = vec4(1.0,0.3,0,0);
 
 uniform vec3 cameraPos;
 uniform vec3 viewDir;   // remember to send in normalized value
@@ -22,7 +22,7 @@ uniform sampler2D noiseImage;
 
 vec4 integrate(vec4 sum, float diffuse, float density, vec4 bgcol, float t)
 {
-    vec3 lighting = vec3(0.51, 0.53, 0.63) * 1.3 + 0.5 * vec3(0.85, 0.57, 0.3) * diffuse;
+    vec3 lighting = vec3(0.61, 0.53, 0.63) * 1.3 + 0.5 * vec3(0.85, 0.27, 0.2) * diffuse;
     vec3 colrgb = mix( vec3(1.0, 0.95, 0.8), vec3(0.65, 0.65, 0.65), density);
     vec4 col = vec4(colrgb, density);
     col.rgb *= lighting;
@@ -37,46 +37,46 @@ vec4 integrate(vec4 sum, float diffuse, float density, vec4 bgcol, float t)
         if(t > far) break; \
         vec3 pos = ro + t * rd; \
         if( pos.y<_MinHeight || pos.y>_MaxHeight || sum.a>0.99 )  {\
-            t += max(0.1, 0.02*t); \
+            t += max(0.08, 0.05*t); \
             continue; \
         }\
-        float density = noiseMap( pos ); \
+        float density = noiseMap(pos); \
         if( density > 0.01 ) {  \
-            float diffuse = clamp((density - noiseMap(pos + 0.6 * _SunDir.xyz)) / 0.6, 0.0, 1.0);\
+            float diffuse = clamp((density - noiseMap(pos + 0.3 * normalize(_SunDir.xyz))) / 0.6, 0.0, 1.0);\
             sum = integrate(sum, diffuse, density, bgcol, t); \
         }  \
-        t += max(0.06,0.05*t);  \
+        t += max(0.06, 0.05 * t);  \
     } \
 }
 
-#define NOISEPROC(N, P) 1.75 * N * clamp((_MaxHeight - P.y)/_FadeDistance, 0, 1) 
+#define NOISEPROC(N, P)  1.75 * N * clamp ((0.80 * sin(0.6 * P.z) * sin(0.5 * P.x) - P.y + _MaxHeight) / _FadeDistance, 0.0, 1.0);
 
 float noiseFromImage(vec3 x)
 {
     x *= _Scale;
     vec3 p = floor(x);
     vec3 f = fract(x);
-    f = smoothstep(0,1,f);
+    f = smoothstep(0, 1, f);
     
-    vec2 uv = (p.xy + vec2(37.0, -17.0) * p.z) + f.xy;
-    vec2 rg = texture(noiseImage, uv/256).rg;
-    return 2.0 * mix(rg.g, rg.r, f.z) - 1.0;
-} 
+    vec2 uv = (p.xy + vec2(37.0, 17.0) * p.z) + f.xy;
+    vec2 rg = texture(noiseImage, (uv + 0.5) / 256.0).rg;
+    return mix( rg.g, rg.r, f.z );
+}
 
 float map5(vec3 q)
 {
     vec3 p = q;
     float f;
     f = 0.5 * noiseFromImage(q);
-    q = q * 2;
+    q = q * 2.02;
     f += 0.25 * noiseFromImage(q);
-    q = q * 3;
+    q = q * 2.03;
     f += 0.125 * noiseFromImage(q);
-    q = q * 4;
+    q = q * 2.04;
     f += 0.06250 * noiseFromImage(q);
-    q = q * 5;
+    q = q * 2.05;
     f += 0.03125 * noiseFromImage(q);
-    q = q * 6;
+    q = q * 2.06;
     f += 0.015625 * noiseFromImage(q);
     return NOISEPROC(f, p);
 } 
@@ -86,13 +86,13 @@ float map4(vec3 q)
     vec3 p = q;
     float f;
     f = 0.5 * noiseFromImage(q);
-    q = q * 2;
+    q = q * 2.02;
     f += 0.25 * noiseFromImage(q);
-    q = q * 3;
+    q = q * 2.03;
     f += 0.125 * noiseFromImage(q);
-    q = q * 4;
+    q = q * 2.04;
     f += 0.06250 * noiseFromImage(q);
-    q = q * 5;
+    q = q * 2.05;
     f += 0.03125 * noiseFromImage(q);
     return NOISEPROC(f, p);
 } 
@@ -102,11 +102,11 @@ float map3(vec3 q)
     vec3 p = q;
     float f;
     f = 0.5 * noiseFromImage(q);
-    q = q * 2;
+    q = q * 2.02;
     f += 0.25 * noiseFromImage(q);
-    q = q * 3;
+    q = q * 2.03;
     f += 0.125 * noiseFromImage(q);
-    q = q * 4;
+    q = q * 2.04;
     f += 0.06250 * noiseFromImage(q);
     return NOISEPROC(f, p);
 } 
@@ -116,9 +116,9 @@ float map2(vec3 q)
     vec3 p = q;
     float f;
     f = 0.5 * noiseFromImage(q);
-    q = q * 2;
+    q = q * 2.02;
     f += 0.25 * noiseFromImage(q);
-    q = q * 3;
+    q = q * 2.03;
     f += 0.125 * noiseFromImage(q);
     return NOISEPROC(f, p);
 } 
@@ -128,20 +128,20 @@ float map1(vec3 q)
     vec3 p = q;
     float f;
     f = 0.5 * noiseFromImage(q);
-    q = q * 2;
+    q = q * 2.02;
     f += 0.25 * noiseFromImage(q);
     return NOISEPROC(f, p);
 }
 
 vec4 raymarch( vec3 ro, vec3 rd, vec4 bgcol)
 {    
-    vec4 sum = vec4(0);    
+    vec4 sum = vec4(0);
     float t = 0;
     MARCH(map1);
-    //MARCH(map2);
-    //MARCH(map3);
-    //MARCH(map4);
-    //MARCH(map5);
+    MARCH(map2);
+    MARCH(map3);
+    MARCH(map4);
+    MARCH(map5);
     return clamp( sum, 0.0, 1.0 );
 }
 
@@ -156,7 +156,8 @@ vec3 sky( vec3 rd )
     col += 0.25*vec3(.2,.4,.9); // Main Background
     
     // Sun
-    float sun = clamp( dot(_SunDir.xyz, rd), 0.0, 1.0 );
+    vec3 sunDir = normalize(_SunDir.xyz);
+    float sun = clamp( dot(sunDir, rd), 0.0, 1.0 );
     col += .5*vec3(1.,.9,.9)*exp2(sun*650.-650.); // sun center
     col += .2*vec3(1.0,0.3,0.2)*pow( sun, 2.0 ); // 1st halo
     col += .1*vec3(1.,1.,0.1)*exp2(sun*100.-100.); // 2nd halo
@@ -182,7 +183,8 @@ vec4 cloud( vec3 camPos, vec3 rd, vec4 bgcolor )
 
 void main()
 {
-    // TODO: Fix circular lines
+    // TODO: Fix darkening around cloud borders (as well as when viewing clouds from below or above)
+
     vec2 p = 2.0 * TexCoords - 1.0;
     p.x *= screenSize.x/ screenSize.y;
 

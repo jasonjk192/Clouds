@@ -24,7 +24,7 @@ public:
 
     ~Texture() {}
 
-    Texture(int frameWidth, int frameHeight):
+    Texture(int frameWidth, int frameHeight, GLenum type = GL_UNSIGNED_BYTE):
         width(frameWidth),
         height(frameHeight),
         nrChannels(3),
@@ -34,10 +34,10 @@ public:
         glBindTexture(GL_TEXTURE_2D, ID);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frameWidth, frameHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frameWidth, frameHeight, 0, GL_RGB, type, NULL);
     }
 
-    Texture(float r, float g, float b):
+    Texture(float r, float g, float b, GLenum type = GL_UNSIGNED_BYTE) :
         width(1),
         height(1),
         nrChannels(3),
@@ -53,17 +53,17 @@ public:
         data[0] = (unsigned char)(r * 255.0f);
         data[1] = (unsigned char)(g * 255.0f);
         data[2] = (unsigned char)(b * 255.0f);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, type, data);
     }
 
-    Texture(std::filesystem::path texturePath, bool flipVertical = false):
+    Texture(std::filesystem::path texturePath, bool flipVertical = false, GLenum type = GL_UNSIGNED_BYTE):
         texPath(texturePath)
     {
-        LoadSTBI(flipVertical);
+        LoadSTBI(flipVertical, type);
     }
 
 private:
-    void LoadSTBI(bool flipVertical)
+    void LoadSTBI(bool flipVertical, GLenum type)
     {
         stbi_set_flip_vertically_on_load(flipVertical);
 
@@ -82,7 +82,7 @@ private:
             else if (nrChannels == 4)
                 format = GL_RGBA;
 
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, type, data);
             stbi_image_free(data);
         }
         else
